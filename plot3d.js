@@ -40,8 +40,17 @@ const canvas = document.getElementById('canvas3d');
 const ctx = canvas.getContext('2d');
 const chosenImg = document.getElementById('chosenImg');
 
+
 let img = new window.Image();
 let imgSrc = null;
+
+// Rotation state
+let yaw = Math.PI/6; // left-right
+let pitch = -Math.PI/8; // up-down
+let isDragging = false;
+let lastX = 0, lastY = 0;
+let lastYaw = yaw, lastPitch = pitch;
+let lastRgbPoints = null;
 
 function loadImage(src, callback) {
     img = new window.Image();
@@ -65,6 +74,7 @@ function getImageData(image, cb) {
 }
 
 function plot3D(rgbPoints) {
+    lastRgbPoints = rgbPoints;
     // Clear canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     // 3D perspective projection parameters
@@ -80,15 +90,14 @@ function plot3D(rgbPoints) {
     function project3D([x, y, z]) {
         // Center cube at (0.5,0.5,0.5)
         x -= 0.5; y -= 0.5; z -= 0.5;
-        // Simple rotation for better view
-        const rotY = Math.PI/6, rotX = -Math.PI/8;
-        // Rotate Y
-        let tx = x*Math.cos(rotY) - z*Math.sin(rotY);
-        let tz = x*Math.sin(rotY) + z*Math.cos(rotY);
+        // Apply user-controlled rotation
+        // Yaw (around Y axis)
+        let tx = x*Math.cos(yaw) - z*Math.sin(yaw);
+        let tz = x*Math.sin(yaw) + z*Math.cos(yaw);
         let ty = y;
-        // Rotate X
-        let ty2 = ty*Math.cos(rotX) - tz*Math.sin(rotX);
-        let tz2 = ty*Math.sin(rotX) + tz*Math.cos(rotX);
+        // Pitch (around X axis)
+        let ty2 = ty*Math.cos(pitch) - tz*Math.sin(pitch);
+        let tz2 = ty*Math.sin(pitch) + tz*Math.cos(pitch);
         // Perspective
         let px = tx * axisLen;
         let py = ty2 * axisLen;
@@ -122,6 +131,50 @@ function plot3D(rgbPoints) {
         ctx.arc(x, y, 3, 0, 2*Math.PI);
         ctx.fill();
     });
+// Mouse drag to rotate
+canvas.addEventListener('mousedown', function(e) {
+    isDragging = true;
+    lastX = e.clientX;
+    lastY = e.clientY;
+    lastYaw = yaw;
+    lastPitch = pitch;
+});
+canvas.addEventListener('mousemove', function(e) {
+    if (!isDragging) return;
+    const dx = e.clientX - lastX;
+    const dy = e.clientY - lastY;
+    yaw = lastYaw + dx * 0.01;
+    pitch = Math.max(-Math.PI/2, Math.min(Math.PI/2, lastPitch + dy * 0.01));
+    if (lastRgbPoints) plot3D(lastRgbPoints);
+});
+canvas.addEventListener('mouseup', function(e) {
+    isDragging = false;
+});
+canvas.addEventListener('mouseleave', function(e) {
+    isDragging = false;
+});
+// Touch support
+canvas.addEventListener('touchstart', function(e) {
+    if (e.touches.length === 1) {
+        isDragging = true;
+        lastX = e.touches[0].clientX;
+        lastY = e.touches[0].clientY;
+        lastYaw = yaw;
+        lastPitch = pitch;
+    }
+});
+canvas.addEventListener('touchmove', function(e) {
+    if (!isDragging || e.touches.length !== 1) return;
+    const dx = e.touches[0].clientX - lastX;
+    const dy = e.touches[0].clientY - lastY;
+    yaw = lastYaw + dx * 0.01;
+    pitch = Math.max(-Math.PI/2, Math.min(Math.PI/2, lastPitch + dy * 0.01));
+    if (lastRgbPoints) plot3D(lastRgbPoints);
+    e.preventDefault();
+}, {passive: false});
+canvas.addEventListener('touchend', function(e) {
+    isDragging = false;
+});
 }
 
 function processAndPlot(image) {
