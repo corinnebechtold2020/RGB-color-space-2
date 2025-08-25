@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>RGB Color Space 3D Plotter</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 2em; background: #fafafa; }
+        #canvas3d { width: 600px; height: 600px; display: block; margin: 2em auto; background: #222; }
+        .controls { text-align: center; margin-bottom: 1em; }
+        label { margin-right: 1em; }
+    </style>
+</head>
+<body>
+    <h2>RGB Color Space 3D Plotter</h2>
+    <div style="text-align:center;">
+        <img id="chosenImg" src="" alt="Chosen image will appear here" style="max-width:300px;max-height:300px;display:none;margin-bottom:1em;border:1px solid #ccc;background:#fff;">
+    </div>
+    <div class="controls">
+        <label for="imageSelect">Choose an image:</label>
+        <select id="imageSelect">
+            <option value="">-- Select from unzipped images --</option>
+        </select>
+        <label for="fileInput">or upload your own:</label>
+        <input type="file" id="fileInput" accept="image/*">
+        <button id="plotBtn">Plot RGB</button>
+    </div>
+    <div style="text-align:center;margin-bottom:0.5em;">
+        <b>3D Plot: Red = X, Green = Y, Blue = Z (all axes normalized 0-1)</b>
+    </div>
+    <canvas id="canvas3d" width="600" height="600"></canvas>
+    <script src="plot3d.js"></script>
+</body>
+</html>
